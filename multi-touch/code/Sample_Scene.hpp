@@ -33,31 +33,23 @@ namespace example
             ERROR
         };
 
-        union Color
-        {
-            uint8_t  components[4];
-            uint32_t value;
 
-            Color(uint8_t r, uint8_t g, uint8_t b)
-            {
-                components[0] = r;
-                components[1] = g;
-                components[2] = b;
-            }
-        };
-
-        struct Brush
-        {
-            bool  free;
-            Color color;
-        };
 
         struct Touch
         {
             int32_t id;                             ///< Un valor de ID negativo implica que el touch no está siendo usado
             float   x;
             float   y;
-            Brush * brush;
+            const Atlas::Slice * my_slice;
+
+
+        };
+        std::unique_ptr< Atlas > atlas;
+        struct Switches
+        {
+            const Atlas::Slice * slice;
+
+
         };
 
     private:
@@ -68,9 +60,9 @@ namespace example
         unsigned canvas_height;
         float    square_size;
         float    half_size;
+        Switches my_switches[3];
 
         Touch    touches[2];                       ///< Se gestionan hasta 10 touches simultáneos
-        Brush    brushes[2];                       ///< Se dispone de 10 brochas, una para cada touch activo
         Timer          timer;                               ///< Cronómetro usado para medir intervalos de tiempo
         bool    touch_initial;
         bool    touch_to_fire;

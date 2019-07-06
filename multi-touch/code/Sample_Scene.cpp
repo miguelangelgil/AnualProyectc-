@@ -22,20 +22,14 @@ namespace example
 
 
     Sample_Scene::Sample_Scene()
-    :
-        brushes
-        {
-            { true, { 0xff,    0,    0 } },
-            { true, {    0, 0xff,    0 } }
-
-        }
     {
         canvas_width  = 1280;                   // Todavía no se puede calcular el aspect ratio, por lo que se establece
         canvas_height =  720;                   // un tamaño por defecto hasta poder calcular el tamaño final
         square_size   =  100;
         half_size     =   50;
         state         = LOADING;
-        my_player = new Player({canvas_width/2,canvas_height/2},30.f,100);
+        my_player = new Player({canvas_width/2,canvas_height/2},100.f,100);
+
 
     }
 
@@ -43,7 +37,6 @@ namespace example
         suspended = false;
         state = LOADING;
         for (auto &touch : touches) touch.id = -1;
-        for (auto &brush : brushes) brush.free = true;
 
         //player.xfloor = 0;
         //player.yfloor = 0;
@@ -92,22 +85,21 @@ namespace example
                     case ID(touch-started):                 // El usuario toca la pantalla
                     {
                         // Se busca un objeto touch disponible para ser vinculado al evento que se inicia:
+                        ///los touch se dividen dependiendo de en que lado de la pantalla toques
                         if (*event[ID(x)].as<var::Float>() < canvas_width / 2) {
                             touches[0].id = *event[ID(id)].as<var::Int32>();
                             move.x = touches[0].x = *event[ID(x)].as<var::Float>();
                             move.y = touches[0].y = *event[ID(y)].as<var::Float>();
-                            touches[0].brush = &brushes[0];
-                            brushes[0].free = false;
                             touch_initial = true;
+
 
                         }
                         if (*event[ID(x)].as<var::Float>() > canvas_width / 2) {
                             touches[1].id = *event[ID(id)].as<var::Int32>();
                             fire.x = touches[1].x = *event[ID(x)].as<var::Float>();
                             fire.y = touches[1].y = *event[ID(y)].as<var::Float>();
-                            touches[1].brush = &brushes[1];
-                            brushes[1].free = false;
                             touch_to_fire = true;
+
 
                         }
 
@@ -139,14 +131,6 @@ namespace example
 
                         int32_t id = *event[ID(id)].as<var::Int32>();
 
-                        for (auto &touch : touches) {
-                            if (touch.id == id) {
-                                touch.brush->free = true;
-                                touch.id = -1;
-
-                                break;
-                            }
-                        }
                         touch_initial = false;
                         touch_to_fire = false;
 
@@ -176,54 +160,32 @@ namespace example
                 canvas->clear ();
 
 
-                bool color = true;
-                /*for(auto & tile : listfloor)
-                {
-                    if(color)
-                    {
-                        canvas->set_color(1,0,1);
-                        color = false;
-                    }else
-                    {
-                        canvas->set_color(1,1,1);
-                        color = true;
-
-                    }
-
-                }*/
-
                 floor tile = listfloor[0];
 
                 canvas->set_color(1,1,1);
                 canvas->fill_rectangle({tile.x-tile.x_half_size,tile.y-tile.y_half_size},{tile.x_size,tile.y_size});
 
-                canvas->set_color      (0, 0, 1);
-                //canvas->fill_rectangle({my_player->x - my_player->GetHalfSize() ,my_player->y - my_player->GetHalfSize()},{90,90});
-                //canvas->fill_rectangle({tile.x-tile.x_half_size,tile.y-tile.y_half_size},{tile.x_size,tile.y_size});
 
 
-                for (auto & touch : touches)
-                {
-                    if (touch.id >= 0)
-                    {
-                        Color & color = touch.brush->color;
 
-                        float r = float(color.components[0]) * (1.f / 255.f);
-                        float g = float(color.components[1]) * (1.f / 255.f);
-                        float b = float(color.components[2]) * (1.f / 255.f);
-
-                        canvas->set_color      (r, g, b);
-                        canvas->fill_rectangle ({ touch.x - half_size, touch.y - half_size }, { square_size, square_size });
-                    }
-                }
 
                 my_player->render(*canvas);
                 if(touch_initial)
                 {
-                    canvas->set_color      (0, 0, 0);
-                    canvas->fill_rectangle ({ move.x - half_size, move.y - half_size }, { square_size, square_size });
-                    //virtual void fill_rectangle  (const Point2f & where, const Size2f & size, const Texture_2D   * texture, int handling = CENTER) { }
+                    canvas->fill_rectangle ({ move.x - my_switches[0].slice->width/2, move.y - my_switches[0].slice->height/2 }, {my_switches[0].slice->width, my_switches[0].slice->height },my_switches[0].slice);
+                }
+                if(touch_to_fire)
+                {
+                    canvas->fill_rectangle ({ fire.x - my_switches[0].slice->width/2, fire.y - my_switches[0].slice->height/2 }, {my_switches[0].slice->width, my_switches[0].slice->height },my_switches[0].slice);
+                }
+                for (auto & touch : touches)
+                {
+                    if (touch.id >= 0)
+                    {
 
+                        canvas->fill_rectangle ({ touch.x - touch.my_slice -> width/2, touch.y - touch.my_slice->height/2 }, {touch.my_slice->width,touch.my_slice->height },touch.my_slice);
+
+                    }
                 }
 
 
@@ -238,6 +200,12 @@ namespace example
         Graphics_Context::Accessor context = director.lock_graphics_context();
         if(context)
         {
+            atlas.reset(new Atlas("switches.sprites",context));
+            my_switches[0].slice = atlas->get_slice(ID(0));
+            my_switches[1].slice = atlas->get_slice(ID(r));
+            my_switches[2].slice = atlas->get_slice(ID(l));
+            touches[0].my_slice = my_switches[2].slice;
+            touches[1].my_slice = my_switches[1].slice;
             //cargo el atlas y los slices , tambien ajusto loa animacion con la que va ha empezar
             my_player->my_current_animation = Player::RIGHT;
             state = my_player->SetSlices(context)? READY : ERROR;
@@ -280,26 +248,27 @@ namespace example
             my_bullet.x = my_player->position.coordinates.x();
             my_bullet.y = my_player->position.coordinates.y();
 
-            if (fire.x < touches[1].x + 10)
-            {
-                my_player->my_current_animation = Player::RIGHT;
-            }
 
-            if (fire.x > touches[1].x - 10)
-            {
-                my_player->my_current_animation = Player::LEFT;
-            }
 
-            if (fire.y < touches[1].y + 10)
+            if (fire.y + 10 < touches[1].y  && abs(abs(fire.y) - abs(touches[1].y)) > abs(abs(fire.x) - abs(touches[1].x)))
             {
                 my_player->my_current_animation = Player::BACK;
             }
 
-            if (fire.y > touches[1].y - 10)
+            if (fire.y - 10 > touches[1].y  && abs(abs(fire.y) - abs(touches[1].y)) > abs(abs(fire.x) - abs(touches[1].x)))
             {
                 my_player->my_current_animation = Player::FRONT;
             }
 
+            if (fire.x + 10 < touches[1].x  && abs(abs(fire.x) - abs(touches[1].x)) > abs(abs(fire.y) - abs(touches[1].y)))
+            {
+                my_player->my_current_animation = Player::RIGHT;
+            }
+
+            if (fire.x - 10 > touches[1].x  && abs(abs(fire.x) - abs(touches[1].x) > abs(fire.y) - abs(touches[1].y)))
+            {
+                my_player->my_current_animation = Player::LEFT;
+            }
 
         }else
             {
