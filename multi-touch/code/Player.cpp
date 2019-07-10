@@ -29,7 +29,7 @@ namespace example
     float Player::GetSpeed() {return speed;};
     void Player::SetSpeed(float modifier) {speed += modifier;};
     void Player::SetPosition(Point2f position){this->position = position;};
-    Size2f Player::GetHalfSize(){return half_size;};
+    Size2f Player::GetSize(){return size;};
     bool Player::SetSlices(Graphics_Context::Accessor & context)
     {
         if(context)
@@ -47,6 +47,8 @@ namespace example
             back_animation[0].slice = atlas ->get_slice(ID(hairless_back1));
             back_animation[1].slice = atlas ->get_slice(ID(hairless_back2));
             back_animation[2].slice = atlas ->get_slice(ID(hairless_back3));
+            size.width = front_animation[0].slice->width;
+            size.height = front_animation[0].slice->height;
 
 
         }

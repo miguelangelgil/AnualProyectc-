@@ -15,12 +15,14 @@
 #include <basics/Timer>
 #include <basics/Texture_2D>
 #include "Player.hpp"
+#include "Enemy.hpp"
 
 namespace example
 {
     using basics::Texture_2D;
     using basics::Timer;
     using basics::Atlas;
+    using basics::Vector2f;
 
     class Sample_Scene : public basics::Scene
     {
@@ -52,6 +54,25 @@ namespace example
 
         };
 
+        struct bullet
+        {
+            float x,y;
+            float speed = 300.F;
+            float damage = 10.f;
+            bool visible = true;
+            const Atlas::Slice * bullet_slice;
+            Vector2f direction;
+
+
+        };
+        std::unique_ptr< Atlas > bullet_atlas;
+
+        std::unique_ptr< Atlas > atlas_enemy;
+        std::vector< Enemy *> enemies;
+
+
+
+
     private:
 
         State    state;
@@ -62,33 +83,21 @@ namespace example
         float    half_size;
         Switches my_switches[3];
 
-        Touch    touches[2];                       ///< Se gestionan hasta 10 touches simultáneos
+        Touch    touches[2];                       ///< Se gestionan hasta 2 touches simultáneos
         Timer          timer;                               ///< Cronómetro usado para medir intervalos de tiempo
         bool    touch_initial;
         bool    touch_to_fire;
-        Texture_2D * texture;
-
-
-
-
-        struct floor
-        {
-            float x,y;
-            float x_size;
-            float y_size;
-            float x_half_size;
-            float y_half_size;
-
-
-        };
-        struct bullet
-        {
-            float x,y;
-            float speed = 20.F;
-
-        };
+        std::unique_ptr< Atlas > floor;
         std::vector<bullet> bullets;
-        std::vector<floor> listfloor;
+        float cadence;
+        float aux_cadence=0;
+
+        float cadence_spawn_enemy;
+        float aux_cadence_spawn_enemy=0;
+
+
+
+
         struct initialTouch
         {
             float x,y;
@@ -116,6 +125,7 @@ namespace example
         void update (float time) override;
         void load_textures();
         void run_simulation(float time);
+        void spawn_enemies(float time);
 
     };
 

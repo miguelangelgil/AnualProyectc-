@@ -7,8 +7,8 @@
  *
  * angel.rodriguez@esne.edu
  */
-//#ifndef PLAYER_HEADER
-//#define PLAYER_HEADER
+//#ifndef ENEMY_HEADER
+//#define ENEMY_HEADER
 #include <basics/Atlas>
 #include <basics/Canvas>
 #include <basics/Vector>
@@ -22,21 +22,17 @@ namespace example
     using basics::Graphics_Context;
 
 
-    class Player
+    class Enemy
     {
     public:
         enum Current_animation
         {
-            FRONT,
             LEFT,
             RIGHT,
-            BACK,
-
         };
 
 
         Point2f position;
-        std::unique_ptr< Atlas > atlas;
         struct Animation
         {
             const Atlas::Slice * slice;
@@ -44,6 +40,9 @@ namespace example
 
         };
         Current_animation my_current_animation;
+        std::unique_ptr< Atlas > atlas;
+        bool visible;
+        bool lived;
 
 
 
@@ -52,33 +51,35 @@ namespace example
         float speed = 10.f;
         Size2f size;
         Size2f half_size;
-        int life = 100;
-        bool visible;
+        int life = 10;
+
 
         int animation;
         float rate_animation;
         float aux_rate_animation;
+        float damage;
 
 
-        Animation front_animation[3];
-        Animation left_animation[3];
-        Animation right_animation[3];
-        Animation back_animation[3];
+        Animation left_animation[2];
+        Animation right_animation[2];
 
 
 
 
     public:
-        Player(Point2f position, float speed, int life);
+        Enemy(Point2f position, float speed, int life, float damage);
         int GetLife();
         void SetLife (int modifier);
         float GetSpeed();
         void SetSpeed(float modifier);
         void SetPosition(Point2f position);
-        Size2f GetSize();
+        Size2f GetHalfSize();
         bool SetSlices(Graphics_Context::Accessor & context);
         void render(Canvas & canvas);
         void animate(float time);
+        void Move(Point2f meta, float time);
+        bool Collision(Point2f position,Size2f size);
+        float GetDamage();
 
 
 

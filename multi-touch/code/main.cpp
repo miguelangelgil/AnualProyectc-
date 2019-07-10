@@ -17,7 +17,7 @@
 #include <basics/opengles/Canvas_ES2>
 #include <basics/opengles/OpenGL_ES2>
 
-#include "Sample_Scene.hpp"
+#include "Intro_Scene.hpp"
 
 using namespace basics;
 using namespace example;
@@ -31,7 +31,7 @@ int main ()
 
     // Se crea una escena y se inicia mediante el Director:
 
-    director.run_scene (shared_ptr< Scene >(new Sample_Scene));
+    director.run_scene (shared_ptr< Scene >(new Intro_Scene));
 
     return 0;
 }
